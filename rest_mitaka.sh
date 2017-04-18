@@ -3,7 +3,7 @@
 
 function menu {
 tput setaf 2
-echo -e "*******************************  Options  **********************************"
+echo -e "**************************************  Options  ******************************************"
 echo ""
 echo -e "Chose option" 
 tput setaf 7
@@ -59,23 +59,24 @@ tput setaf 7
 
 #$172 for devstack or $185 for OPNFV
 function get_key {
-key=$(curl -s "http://$cloud_ip:5000/v2.0/tokens" -X POST -H "Content-Type: application/json" -H "Accept: application/json" -d '{"auth": {"tenantName": "admin", "passwordCredentials": {"username": "admin", "password": "admin"}}}')
-auth_key_tmp=$(grep -r $key -e 'id' | awk {'print $8'})
-auth_url_tmp=$(grep -r $key -e 'AUTH' | awk {'print $185'})
+curl -s "http://$cloud_ip:5000/v2.0/tokens" -X POST -H "Content-Type: application/json" -H "Accept: application/json" -d '{"auth": {"tenantName": "admin", "passwordCredentials": {"username": "admin", "password": "admin"}}}' > key.tmp
+auth_key_tmp=$(grep -r key.tmp -e 'id' | awk {'print $8'})
+auth_url_tmp=$(grep -r key.tmp -e 'AUTH' | awk {'print $172'})
 auth_key=${auth_key_tmp:1:$(expr ${#auth_key_tmp} - 3)}
-auth_url=${auth_url_tmp:1:$(expr ${#auth_url_tmp} - 5)}
-#rm key.txt 
+auth_url=${auth_url_tmp:1:$(expr ${#auth_url_tmp} - 5)} 
+rm key.tmp
 }
 function show_key {
-key=$(curl -s "http://$cloud_ip:5000/v2.0/tokens" -X POST -H "Content-Type: application/json" -H "Accept: application/json" -d '{"auth": {"tenantName": "admin", "passwordCredentials": {"username": "admin", "password": "admin"}}}')
-auth_key_tmp=$(grep -r key.txt -e 'id' | awk {'print $8'})
-auth_url_tmp=$(grep -r key.txt -e 'AUTH' | awk {'print $185'})
+curl -s "http://$cloud_ip:5000/v2.0/tokens" -X POST -H "Content-Type: application/json" -H "Accept: application/json" -d '{"auth": {"tenantName": "admin", "passwordCredentials": {"username": "admin", "password": "admin"}}}' > key.tmp
+auth_key_tmp=$(grep -r key.tmp -e 'id' | awk {'print $8'})
+auth_url_tmp=$(grep -r key.tmp -e 'AUTH' | awk {'print $172'})
 auth_key=${auth_key_tmp:1:$(expr ${#auth_key_tmp} - 3)}
 auth_url=${auth_url_tmp:1:$(expr ${#auth_url_tmp} - 5)}
-#rm key.txt
+rm key.tmp
 echo -e "\e[32mAuth_key is:      	 \e[39m"   $auth_key && echo -e "\e[32mSwift_auth_url is:	 \e[39m"	$auth_url 
 }
 function container_create {
+echo ""
 existing_containers=$(curl -s $auth_url/ -X GET -H "X-Auth-Token:$auth_key") && echo -e "\e[32mExisting containers:    \e[39m" && echo -e  $existing_containers && echo ""
 echo -e "\e[32mInsert container name\e[39m:" && read container_name && curl -s $auth_url/$container_name -X PUT -H "X-Auth-Token:$auth_key" && echo ""
 existing_containers=$(curl -s $auth_url/ -X GET -H "X-Auth-Token:$auth_key") && echo -e "\e[32mExisting containers:    \e[39m" && echo -e  $existing_containers && echo ""
@@ -83,21 +84,30 @@ echo -e "Container created"
 }
 
 function object_create {
+echo ""
 existing_containers=$(curl -s $auth_url/ -X GET -H "X-Auth-Token:$auth_key") && echo -e "\e[32mExisting containers:    \e[39m" && echo -e  $existing_containers && echo ""
 existing_containers_tmp=$(echo $existing_containers | tr "\n" " ")  
 IFS=" " && read -a existing_containers <<< "$existing_containers_tmp" && unset IFS
 	for container_number in "${existing_containers[@]}";		do
 			container_content=$(curl -s "$auth_url/$container_number" -X GET -H "X-Auth-Token:$auth_key")
-			echo -e "Content in $container_number :" $container_content
+			echo -e "\e[32mContent in\e[39m $container_number :" $container_content
 		done
+echo ""
 echo -e "\e[32mInsert container name you wish to use:\e[39m"	&& read container_name && echo -e ""
 echo -e "\e[32mInsert data name:\e[39m" && read data_name && echo -e ""
+
+
+START=$(date +%s.%N)
 curl -s $auth_url/$container_name/$data_name -X PUT -T $data_name -H "X-Auth-Token:$auth_key"
+END=$(date +%s.%N)
+TIME_DIFF=$(echo "$END - $START" | bc)
+
 container_content=$(curl -s $auth_url/$container_name -X GET -H "X-Auth-Token:$auth_key")
-echo $container_content && echo -e "Transfer completed" && echo -e ""
+echo $container_content && echo -e "\e[32mTransfer completed in \e[39m $TIME_DIFF " && echo -e ""
 }
 
 function object_download {
+echo ""
 existing_containers=$(curl -s $auth_url/ -X GET -H "X-Auth-Token:$auth_key") && echo -e "\e[32mExisting containers:    \e[39m" && echo -e $existing_containers | tr "\n" " " 
 existing_containers_tmp=$(echo $existing_containers | tr "\n" " ")  
 IFS=" " && read -a existing_containers <<< "$existing_containers_tmp" && unset IFS
@@ -108,11 +118,15 @@ echo -e ""
 		done
 echo -e "\e[32mInsert container name from which you want to download:\e[39m" && read container_name
 echo -e "\e[32mInsert object name you wish to download:\e[39m" && read object_name
+#START_TIME=$SECONDS
+typeset -F SECONDS=0
 curl -s $auth_url/$container_name/$object_name -X GET -H "X-Auth-Token:$auth_key" && echo -e ""
-ls -l | grep $object_name && echo -e "Download completed" && echo -e ""
+#ELAPSED_TIME=$(($SECONDS - $START_TIME))
+ls -l | grep $object_name && echo -e "\e[32mDownload completed in \e[39m$SECONDS" && echo -e ""
 echo -e "Object downloaded"
 }
 function object_delete { 
+echo ""
 existing_containers=$(curl -s $auth_url/ -X GET -H "X-Auth-Token:$auth_key") && echo -e "\e[32mExisting containers:    \e[39m" && echo -e  $existing_containers && echo ""
 existing_containers_tmp=$(echo $existing_containers | tr "\n" " ")  
 IFS=" " && read -a existing_containers <<< "$existing_containers_tmp" && unset IFS
@@ -147,15 +161,17 @@ echo -e "Container deleted"
 #Main
 tput setaf 6
 echo ""
-echo -e "**************  mitaka_rest.sh is a bash script capable of   ******************* "
-echo -e "**************  sending REST calls to OpenStack public IP    ******************* "
-echo -e "**************  based on devstack mitaka using keystone v2   ******************* "
-echo ""
-echo -e "Before running the script verify what is the owner account of the swift project in your cloud"
+echo -e "|-----------------------------------------------------|"
+echo -e "|***  mitaka_rest.sh is a bash script capable of   ***|"
+echo -e "|***  sending REST calls to OpenStack public IP    ***|"
+echo -e "|***  based on devstack mitaka using keystone v2   ***|"
+echo -e "|-----------------------------------------------------|"
+echo -e "|***  Info: Before running the script verify what  ***|"
+echo -e "|***  is the owner account of the swift project    ***|"
+echo -e "|-----------------------------------------------------|"
 echo ""
 echo ""
 tput setaf 2 
-
 echo -e "Insert OpenStack IP address" 
 tput setaf 7  
 read cloud_ip
