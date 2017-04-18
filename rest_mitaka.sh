@@ -95,13 +95,10 @@ IFS=" " && read -a existing_containers <<< "$existing_containers_tmp" && unset I
 echo ""
 echo -e "\e[32mInsert container name you wish to use:\e[39m"	&& read container_name && echo -e ""
 echo -e "\e[32mInsert data name:\e[39m" && read data_name && echo -e ""
-
-
 START=$(date +%s.%N)
 curl -s $auth_url/$container_name/$data_name -X PUT -T $data_name -H "X-Auth-Token:$auth_key"
 END=$(date +%s.%N)
 TIME_DIFF=$(echo "$END - $START" | bc)
-
 container_content=$(curl -s $auth_url/$container_name -X GET -H "X-Auth-Token:$auth_key")
 echo $container_content && echo -e "\e[32mTransfer completed in \e[39m $TIME_DIFF " && echo -e ""
 }
@@ -116,13 +113,14 @@ echo -e ""
 			container_content=$(curl -s "$auth_url/$container_number" -X GET -H "X-Auth-Token:$auth_key")
 			echo -e "Content in $container_number :" $container_content
 		done
+echo ""
 echo -e "\e[32mInsert container name from which you want to download:\e[39m" && read container_name
 echo -e "\e[32mInsert object name you wish to download:\e[39m" && read object_name
-#START_TIME=$SECONDS
-typeset -F SECONDS=0
+START=$(date +%s.%N)
 curl -s $auth_url/$container_name/$object_name -X GET -H "X-Auth-Token:$auth_key" && echo -e ""
-#ELAPSED_TIME=$(($SECONDS - $START_TIME))
-ls -l | grep $object_name && echo -e "\e[32mDownload completed in \e[39m$SECONDS" && echo -e ""
+END=$(date +%s.%N)
+TIME_DIFF=$(echo "$END - $START" | bc)
+ls -l | grep $object_name && echo -e "\e[32mDownload completed in \e[39m $TIME_DIFF" && echo -e ""
 echo -e "Object downloaded"
 }
 function object_delete { 
@@ -134,6 +132,7 @@ IFS=" " && read -a existing_containers <<< "$existing_containers_tmp" && unset I
 			container_content=$(curl -s "$auth_url/$container_number" -X GET -H "X-Auth-Token:$auth_key")
 			echo -e "Content in $container_number :" $container_content
 		done
+echo ""
 echo -e "\e[32mInsert container name from which you want to delete object:\e[39m" && read container_name
 echo -e "\e[32mInsert object name you wish to delete\e[39m" && read object_name
 curl -s $auth_url/$container_name/$object_name -X DELETE -H "X-Auth-Token:$auth_key" && echo -e ""
@@ -152,6 +151,7 @@ IFS=" " && read -a existing_containers <<< "$existing_containers_tmp" && unset I
 			container_content=$(curl -s "$auth_url/$container_number" -X GET -H "X-Auth-Token:$auth_key")
 			echo -e "Content in $container_number :" $container_content
 		done
+echo "" 
 echo -e "\e[32mInsert container name you wish to delete :\e[39m" && read container_name		
 curl -s $auth_url/$container_name -X DELETE -H "X-Auth-Token:$auth_key" && echo ""
 existing_containers=$(curl -s $auth_url/ -X GET -H "X-Auth-Token:$auth_key") && echo -e "\e[32mExisting containers:    \e[39m"		$existing_containers && echo ""
