@@ -1,6 +1,6 @@
 About
 ------------
-Bash tool for sending REST command to Swift (OpenStack Mitaka) based on v2 auth
+Bash tool for sending REST commands to Swift (OpenStack Mitaka) based on v2 auth
 
 Supported methods
 -----------------
