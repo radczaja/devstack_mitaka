@@ -7,3 +7,7 @@ Supported methods
 1) get key
 2) create/delete/list containers
 3) create/delete/list objects
+
+Planned
+-------
+Add Glance & Cinder support
