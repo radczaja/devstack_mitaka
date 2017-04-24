@@ -1,13 +1,13 @@
 About
 ------------
-Bash tool for sending REST commands to Swift (OpenStack Mitaka) based on v2 auth
+Repository with all devstack mitaka reletad scripts.
 
-Supported methods
------------------
-1) get key
-2) create/delete/list containers
-3) create/delete/list objects
-
-Planned
+Content
 -------
-Add Glance & Cinder support
+1) rest_mitaka - bash tool for sending rest requests to OpenStack Object Storage module - Swift. 
+   Supported methods: 
+  - create/list/delete container
+  - create/list/delete object
+  
+2) create_rgw_user_for_devstack - bash script for creating rados gateway user. Needed for working with devstack-plugin-ceph
+   while deployed using devstack.
